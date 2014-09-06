@@ -1,0 +1,7 @@
+sjakkmotorer/
+repo/
+.DS_Store
+.idea/
+target/
+Motorbinge.java
+Sjakkmotor.iml
