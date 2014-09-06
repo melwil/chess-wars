@@ -12,11 +12,11 @@ public class AwesomeSjakkmotor extends AbstraktSjakkmotor {
 
     @Override
     public String lagetAv() {
-        return null;
+        return "Håvard og Aleksander";
     }
 
     @Override
     public String navn() {
-        return null;
+        return "42 hamsters & 1 drunk cat";
     }
 }
