@@ -18,6 +18,7 @@ public class AwesomeSjakkmotor extends AbstraktSjakkmotor {
     private long startTime = 0;
 
     private List<Round> deeperAnalysis = new ArrayList<>();
+    private DestinationAnalysis destinationAnalysis = new DestinationAnalysis();
 
     @Override
     protected void finnBesteTrekk(Posisjon posisjon) {
@@ -36,14 +37,20 @@ public class AwesomeSjakkmotor extends AbstraktSjakkmotor {
             Initial analysis
          */
         int minBesteScore = Integer.MIN_VALUE;
+        int motstandersBesteScore = Integer.MAX_VALUE;
         for (final Trekk mittTrekk : posisjon.alleTrekk()) {
             posisjon.gjorTrekk(mittTrekk);
-            int motstandersBesteScore = Integer.MAX_VALUE;
+            motstandersBesteScore = Integer.MAX_VALUE;
             for (final Trekk motstandersTrekk : posisjon.alleTrekk()) {
                 posisjon.gjorTrekk(motstandersTrekk);
                 motstandersBesteScore = Math.min(motstandersBesteScore,
                         posisjon.sumAvMateriellPaaBrettet());
-                deeperAnalysis.add(new Round(mittTrekk.move().getShortMoveDesc(), motstandersTrekk.move().getShortMoveDesc(), minBesteScore, motstandersBesteScore));
+                if (mittTrekk.erSlag() && motstandersTrekk.erSlag()) {
+                    if (debug) {
+                        Logger.log("-> Har slagtrekk: "+mittTrekk.brikkeSomFlyttes());
+                    }
+                    deeperAnalysis.add(new Round(mittTrekk.move().getShortMoveDesc(), motstandersTrekk.move().getShortMoveDesc(), minBesteScore, motstandersBesteScore));
+                }
                 posisjon.taTilbakeSisteTrekk();
             }
             posisjon.taTilbakeSisteTrekk();
@@ -56,9 +63,10 @@ public class AwesomeSjakkmotor extends AbstraktSjakkmotor {
         /*
             Deeper analysis beyond initial calculation
          */
-        for (Round round : deeperAnalysis) {
-
+        while (deeperAnalysis.size() > 0) {
+            dypereAnalyseForSlagTrekk(posisjon);
         }
+
 
         if (debug) {
             long endTime = System.currentTimeMillis() - startTime;
@@ -66,10 +74,35 @@ public class AwesomeSjakkmotor extends AbstraktSjakkmotor {
         }
     }
 
-    private Trekk dypereAnalyseForSlagTrekk() {
+    private void dypereAnalyseForSlagTrekk(Posisjon posisjon) {
+        int minBesteScore = Integer.MIN_VALUE;
+        int motstandersBesteScore = Integer.MAX_VALUE;
 
+        for (Round round : deeperAnalysis) {
+            // Gjenta lagrede trekk
+            posisjon.gjorTrekk(round.getMyMove());
+            posisjon.gjorTrekk(round.getHisMove());
 
-        return null;
+            for (final Trekk mittTrekk : posisjon.alleTrekk()) {
+                posisjon.gjorTrekk(mittTrekk);
+                motstandersBesteScore = Integer.MAX_VALUE;
+                for (final Trekk motstandersTrekk : posisjon.alleTrekk()) {
+                    posisjon.gjorTrekk(motstandersTrekk);
+                    motstandersBesteScore = Math.min(motstandersBesteScore,
+                            posisjon.sumAvMateriellPaaBrettet());
+                    posisjon.taTilbakeSisteTrekk();
+                }
+                posisjon.taTilbakeSisteTrekk();
+                if (minBesteScore < motstandersBesteScore) {
+                    minBesteScore = motstandersBesteScore;
+                    settBesteTrekk(posisjon.fulltTrekkFraPrimitiv(round.getMyMove()));
+                }
+            }
+
+            // Undo de lagrede trekkene
+            posisjon.taTilbakeSisteTrekk();
+            posisjon.taTilbakeSisteTrekk();
+        }
     }
 
     @Override
