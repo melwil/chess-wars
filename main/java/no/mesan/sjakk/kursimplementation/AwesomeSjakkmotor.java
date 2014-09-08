@@ -19,4 +19,8 @@ public class AwesomeSjakkmotor extends AbstraktSjakkmotor {
     public String navn() {
         return "42 hamsters & 1 drunk cat";
     }
+    
+    public static void main(String[] args) {
+    	new AwesomeSjakkmotor().start();
+    }
 }
